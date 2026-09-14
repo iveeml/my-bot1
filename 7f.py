@@ -3,26 +3,23 @@ import asyncio
 import aiosqlite
 import time
 import aiohttp
-from threading import Thread
-from flask import Flask
+from aiohttp import web
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
 # ================= سيرفر وهمي لإبقاء Render شغال =================
-web_app = Flask('')
+async def handle(request):
+    return web.Response(text="Bot is running live!")
 
-@web_app.route('/')
-def home():
-    return "Bot is running live!"
-
-def run_flask():
+async def web_server():
+    app = web.Application()
+    app.router.add_get('/', handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
     port = int(os.environ.get("PORT", 8080))
-    web_app.run(host='0.0.0.0', port=port)
-
-def keep_alive():
-    t = Thread(target=run_flask)
-    t.daemon = True
-    t.start()
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    print(f"تم تشغيل سيرفر الويب الجانبي على البورت {port}")
 
 # ================= الاعدادات =================
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
@@ -392,11 +389,15 @@ async def send_and_delete_content(user_id: int, is_secret: bool):
 
 # ================= تشغيل البوت =================
 async def main():
-    print("تشغيل سيرفر الويب الجانبي...")
-    keep_alive()
-    
     print("جاري تشغيل قاعدة البيانات...")
     await init_db()
+    
+    print("تشغيل سيرفر الويب الجانبي (aiohttp)...")
+    await web_server()
+    
+    print("تنظيف الاتصالات المعلقة (لحماية البوت من التعارض)...")
+    await bot.delete_webhook(drop_pending_updates=True)
+    
     print("البوت شغال الحين وينتظر الرسايل...")
     await bot.polling(non_stop=True)
 
