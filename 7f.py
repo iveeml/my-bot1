@@ -25,7 +25,7 @@ def keep_alive():
     t.start()
 
 # ================= الاعدادات =================
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "8262677611:AAGz8a7Cfvlm0so5GFBfxDzcBqsGoyfcgF8")
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 ADMIN_ID = int(os.environ.get("ADMIN_ID", "8434194552"))
 
 bot = AsyncTeleBot(BOT_TOKEN)
