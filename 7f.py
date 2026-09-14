@@ -3,11 +3,28 @@ import asyncio
 import aiosqlite
 import time
 import aiohttp
+from threading import Thread
+from flask import Flask
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 
+# ================= سيرفر وهمي لإبقاء Render شغال =================
+web_app = Flask('')
+
+@web_app.route('/')
+def home():
+    return "Bot is running live!"
+
+def run_flask():
+    port = int(os.environ.get("PORT", 8080))
+    web_app.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = Thread(target=run_flask)
+    t.daemon = True
+    t.start()
+
 # ================= الاعدادات =================
-# يتم سحب التوكن من متغيرات البيئة لمنع تسريبه، أو استخدام التوكن الافتراضي
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "8262677611:AAGz8a7Cfvlm0so5GFBfxDzcBqsGoyfcgF8")
 ADMIN_ID = int(os.environ.get("ADMIN_ID", "8434194552"))
 
@@ -375,6 +392,9 @@ async def send_and_delete_content(user_id: int, is_secret: bool):
 
 # ================= تشغيل البوت =================
 async def main():
+    print("تشغيل سيرفر الويب الجانبي...")
+    keep_alive()
+    
     print("جاري تشغيل قاعدة البيانات...")
     await init_db()
     print("البوت شغال الحين وينتظر الرسايل...")
